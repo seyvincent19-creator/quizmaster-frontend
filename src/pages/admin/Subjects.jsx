@@ -131,6 +131,7 @@ export default function Subjects() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-600">ID</th>
                     <th className="text-left py-3 px-4 font-semibold text-gray-600">Name</th>
                     <th className="text-left py-3 px-4 font-semibold text-gray-600">Department</th>
                     <th className="text-left py-3 px-4 font-semibold text-gray-600">Description</th>
@@ -143,6 +144,7 @@ export default function Subjects() {
                 <tbody>
                   {subjects.map(s => (
                     <tr key={s.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4 text-gray-400">{s.id}</td>
                       <td className="py-3 px-4 font-medium text-gray-800">{s.name}</td>
                       <td className="py-3 px-4 text-gray-500">{s.department?.name || <span className="text-gray-300">—</span>}</td>
                       <td className="py-3 px-4 text-gray-500 max-w-xs">
