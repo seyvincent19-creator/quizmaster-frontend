@@ -56,7 +56,7 @@ export default function Dashboard() {
     setSubjectModal(true);
     setSubjectsLoading(true);
     try {
-      const res = await subjectsApi.list();
+      const res = await subjectsApi.list(user?.department_id);
       setSubjects(res.data.data);
     } catch {
       toast.error('Failed to load subjects');

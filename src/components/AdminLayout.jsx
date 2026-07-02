@@ -5,6 +5,8 @@ import toast from 'react-hot-toast';
 const navLinks = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
   { to: '/admin/subjects', label: 'Subjects', icon: '📚' },
+  { to: '/admin/departments', label: 'Departments', icon: '🏢' },
+  { to: '/admin/classes', label: 'Classes', icon: '🏫' },
   { to: '/admin/questions', label: 'Questions', icon: '❓' },
   { to: '/admin/users', label: 'Students', icon: '🎓' },
   { to: '/admin/reports', label: 'Reports', icon: '📈' },

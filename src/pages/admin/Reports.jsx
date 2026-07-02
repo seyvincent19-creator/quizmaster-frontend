@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '../../components/AdminLayout';
-import { adminReportsApi, adminUsersApi } from '../../lib/api';
+import { adminReportsApi, adminClassesApi } from '../../lib/api';
 import toast from 'react-hot-toast';
 import Spinner from '../../components/ui/Spinner';
 import Pagination from '../../components/ui/Pagination';
@@ -50,8 +50,11 @@ export default function Reports() {
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
-    adminUsersApi.classOptions().then(r => setClassOptions(r.data)).catch(() => {});
-    adminUsersApi.generationOptions().then(r => setGenerationOptions(r.data)).catch(() => {});
+    adminClassesApi.list().then(r => {
+      const classes = r.data.data;
+      setClassOptions([...new Set(classes.map(c => c.name))].sort());
+      setGenerationOptions([...new Set(classes.map(c => c.generation).filter(Boolean))].sort());
+    }).catch(() => {});
   }, []);
 
   const handleExport = async (type) => {

@@ -1,19 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '../../components/AdminLayout';
-import { adminSubjectsApi, adminDepartmentsApi } from '../../lib/api';
+import { adminDepartmentsApi } from '../../lib/api';
 import toast from 'react-hot-toast';
 import Modal from '../../components/ui/Modal';
 import Spinner from '../../components/ui/Spinner';
 
-const emptyForm = { name: '', department_id: '', description: '', is_active: true };
+const emptyForm = { name: '', description: '', is_active: true };
 
-export default function Subjects() {
-  const [subjects, setSubjects] = useState([]);
+export default function Departments() {
   const [departments, setDepartments] = useState([]);
-  const [departmentFilter, setDepartmentFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [editSubject, setEditSubject] = useState(null);
+  const [editDepartment, setEditDepartment] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [formErrors, setFormErrors] = useState({});
   const [formLoading, setFormLoading] = useState(false);
@@ -22,31 +20,27 @@ export default function Subjects() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await adminSubjectsApi.list(departmentFilter || null);
-      setSubjects(res.data.data);
+      const res = await adminDepartmentsApi.list();
+      setDepartments(res.data.data);
     } catch {
-      toast.error('Failed to load subjects');
+      toast.error('Failed to load departments');
     } finally {
       setLoading(false);
     }
-  }, [departmentFilter]);
+  }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  useEffect(() => {
-    adminDepartmentsApi.list().then(r => setDepartments(r.data.data)).catch(() => {});
-  }, []);
-
   const openCreate = () => {
-    setEditSubject(null);
+    setEditDepartment(null);
     setForm(emptyForm);
     setFormErrors({});
     setShowForm(true);
   };
 
-  const openEdit = (s) => {
-    setEditSubject(s);
-    setForm({ name: s.name, department_id: s.department_id || '', description: s.description || '', is_active: s.is_active });
+  const openEdit = (d) => {
+    setEditDepartment(d);
+    setForm({ name: d.name, description: d.description || '', is_active: d.is_active });
     setFormErrors({});
     setShowForm(true);
   };
@@ -56,18 +50,18 @@ export default function Subjects() {
     setFormLoading(true);
     setFormErrors({});
     try {
-      if (editSubject) {
-        await adminSubjectsApi.update(editSubject.id, form);
-        toast.success('Subject updated!');
+      if (editDepartment) {
+        await adminDepartmentsApi.update(editDepartment.id, form);
+        toast.success('Department updated!');
       } else {
-        await adminSubjectsApi.create(form);
-        toast.success('Subject created!');
+        await adminDepartmentsApi.create(form);
+        toast.success('Department created!');
       }
       setShowForm(false);
       load();
     } catch (err) {
       if (err.response?.data?.errors) setFormErrors(err.response.data.errors);
-      else toast.error(err.response?.data?.message || 'Failed to save subject');
+      else toast.error(err.response?.data?.message || 'Failed to save department');
     } finally {
       setFormLoading(false);
     }
@@ -75,8 +69,8 @@ export default function Subjects() {
 
   const handleDelete = async () => {
     try {
-      await adminSubjectsApi.delete(deleteId);
-      toast.success('Subject deleted');
+      await adminDepartmentsApi.delete(deleteId);
+      toast.success('Department deleted');
       setDeleteId(null);
       load();
     } catch (err) {
@@ -85,10 +79,10 @@ export default function Subjects() {
     }
   };
 
-  const handleToggleActive = async (subject) => {
+  const handleToggleActive = async (department) => {
     try {
-      await adminSubjectsApi.toggleActive(subject.id);
-      toast.success(`Subject ${subject.is_active ? 'deactivated' : 'activated'}`);
+      await adminDepartmentsApi.toggleActive(department.id);
+      toast.success(`Department ${department.is_active ? 'deactivated' : 'activated'}`);
       load();
     } catch {
       toast.error('Failed to update status');
@@ -105,26 +99,19 @@ export default function Subjects() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Subjects</h1>
-            {!loading && <p className="text-gray-500 text-sm mt-1">{subjects.length} subjects</p>}
+            <h1 className="text-2xl font-bold text-gray-900">Departments</h1>
+            {!loading && <p className="text-gray-500 text-sm mt-1">{departments.length} departments</p>}
           </div>
-          <button onClick={openCreate} className="btn-primary">+ Add Subject</button>
-        </div>
-
-        <div className="card py-4">
-          <select className="input w-48" value={departmentFilter} onChange={e => setDepartmentFilter(e.target.value)}>
-            <option value="">All Departments</option>
-            {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
+          <button onClick={openCreate} className="btn-primary">+ Add Department</button>
         </div>
 
         <div className="card">
           {loading ? (
             <div className="flex justify-center py-12"><Spinner /></div>
-          ) : subjects.length === 0 ? (
+          ) : departments.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-5xl mb-3">📚</div>
-              <p className="text-gray-500">No subjects yet. Create one to get started.</p>
+              <div className="text-5xl mb-3">🏢</div>
+              <p className="text-gray-500">No departments yet. Create one to get started.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -132,39 +119,35 @@ export default function Subjects() {
                 <thead>
                   <tr className="border-b border-gray-200">
                     <th className="text-left py-3 px-4 font-semibold text-gray-600">Name</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-600">Department</th>
                     <th className="text-left py-3 px-4 font-semibold text-gray-600">Description</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-600">Questions</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-600">Active Questions</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-600">Classes</th>
                     <th className="text-left py-3 px-4 font-semibold text-gray-600">Status</th>
                     <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {subjects.map(s => (
-                    <tr key={s.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4 font-medium text-gray-800">{s.name}</td>
-                      <td className="py-3 px-4 text-gray-500">{s.department?.name || <span className="text-gray-300">—</span>}</td>
+                  {departments.map(d => (
+                    <tr key={d.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4 font-medium text-gray-800">{d.name}</td>
                       <td className="py-3 px-4 text-gray-500 max-w-xs">
-                        <p className="truncate">{s.description || '—'}</p>
+                        <p className="truncate">{d.description || '—'}</p>
                       </td>
-                      <td className="py-3 px-4 text-gray-600">{s.questions_count ?? 0}</td>
-                      <td className="py-3 px-4 text-gray-600">{s.active_questions_count ?? 0}</td>
+                      <td className="py-3 px-4 text-gray-600">{d.classes_count ?? 0}</td>
                       <td className="py-3 px-4">
-                        <span className={s.is_active ? 'badge badge-green' : 'badge badge-gray'}>
-                          {s.is_active ? 'Active' : 'Inactive'}
+                        <span className={d.is_active ? 'badge badge-green' : 'badge badge-gray'}>
+                          {d.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex gap-2 justify-end">
                           <button
-                            onClick={() => handleToggleActive(s)}
+                            onClick={() => handleToggleActive(d)}
                             className="btn-secondary text-xs px-2.5 py-1"
                           >
-                            {s.is_active ? 'Deactivate' : 'Activate'}
+                            {d.is_active ? 'Deactivate' : 'Activate'}
                           </button>
-                          <button onClick={() => openEdit(s)} className="btn-secondary text-xs px-2.5 py-1">Edit</button>
-                          <button onClick={() => setDeleteId(s.id)} className="btn-danger text-xs px-2.5 py-1">Delete</button>
+                          <button onClick={() => openEdit(d)} className="btn-secondary text-xs px-2.5 py-1">Edit</button>
+                          <button onClick={() => setDeleteId(d.id)} className="btn-danger text-xs px-2.5 py-1">Delete</button>
                         </div>
                       </td>
                     </tr>
@@ -180,12 +163,12 @@ export default function Subjects() {
       <Modal
         isOpen={showForm}
         onClose={() => setShowForm(false)}
-        title={editSubject ? 'Edit Subject' : 'Add Subject'}
+        title={editDepartment ? 'Edit Department' : 'Add Department'}
         footer={
           <>
             <button onClick={() => setShowForm(false)} className="btn-secondary">Cancel</button>
             <button onClick={handleFormSubmit} disabled={formLoading} className="btn-primary">
-              {formLoading ? <Spinner size="sm" /> : editSubject ? 'Update' : 'Create'}
+              {formLoading ? <Spinner size="sm" /> : editDepartment ? 'Update' : 'Create'}
             </button>
           </>
         }
@@ -196,18 +179,8 @@ export default function Subjects() {
               value={form.name}
               onChange={e => handleField('name', e.target.value)}
               className={`input ${formErrors.name ? 'border-red-400' : ''}`}
-              placeholder="e.g. PHP Programming"
+              placeholder="e.g. Computer Science"
             />
-          </FormField>
-          <FormField label="Department" error={formErrors.department_id}>
-            <select
-              value={form.department_id}
-              onChange={e => handleField('department_id', e.target.value)}
-              className={`input ${formErrors.department_id ? 'border-red-400' : ''}`}
-            >
-              <option value="">Select department</option>
-              {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-            </select>
           </FormField>
           <FormField label="Description" error={formErrors.description}>
             <textarea
@@ -221,12 +194,12 @@ export default function Subjects() {
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
-              id="subject_is_active"
+              id="department_is_active"
               checked={form.is_active}
               onChange={e => handleField('is_active', e.target.checked)}
               className="w-4 h-4"
             />
-            <label htmlFor="subject_is_active" className="text-sm text-gray-700">Active (visible to students)</label>
+            <label htmlFor="department_is_active" className="text-sm text-gray-700">Active (visible to students)</label>
           </div>
         </div>
       </Modal>
@@ -235,7 +208,7 @@ export default function Subjects() {
       <Modal
         isOpen={!!deleteId}
         onClose={() => setDeleteId(null)}
-        title="Delete Subject?"
+        title="Delete Department?"
         footer={
           <>
             <button onClick={() => setDeleteId(null)} className="btn-secondary">Cancel</button>
@@ -244,7 +217,7 @@ export default function Subjects() {
         }
       >
         <p className="text-gray-600">
-          This will permanently delete the subject. Subjects with questions assigned cannot be deleted — reassign or remove questions first.
+          This will permanently delete the department. Departments with classes assigned cannot be deleted — reassign or remove the classes first.
         </p>
       </Modal>
     </AdminLayout>

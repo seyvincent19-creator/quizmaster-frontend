@@ -46,7 +46,17 @@ export const authApi = {
 
 // Public Subjects (no auth needed)
 export const subjectsApi = {
-  list: () => api.get('/subjects'),
+  list: (departmentId) => api.get('/subjects', { params: departmentId ? { department_id: departmentId } : {} }),
+};
+
+// Public Departments (no auth needed)
+export const departmentsApi = {
+  list: () => api.get('/departments'),
+};
+
+// Public Classes (no auth needed)
+export const classesApi = {
+  list: (departmentId) => api.get('/classes', { params: departmentId ? { department_id: departmentId } : {} }),
 };
 
 // Quiz
@@ -88,8 +98,6 @@ export const adminUsersApi = {
   show: (id) => api.get(`/admin/users/${id}`),
   toggleActive: (id) => api.put(`/admin/users/${id}/toggle-active`),
   attempts: (id, page = 1) => api.get(`/admin/users/${id}/attempts`, { params: { page } }),
-  classOptions: () => api.get('/admin/users/class-options'),
-  generationOptions: () => api.get('/admin/users/generation-options'),
 };
 
 // Admin Reports
@@ -105,11 +113,29 @@ export const adminReportsApi = {
 
 // Admin Subjects
 export const adminSubjectsApi = {
-  list: () => api.get('/admin/subjects'),
+  list: (departmentId) => api.get('/admin/subjects', { params: departmentId ? { department_id: departmentId } : {} }),
   create: (data) => api.post('/admin/subjects', data),
   update: (id, data) => api.put(`/admin/subjects/${id}`, data),
   delete: (id) => api.delete(`/admin/subjects/${id}`),
   toggleActive: (id) => api.put(`/admin/subjects/${id}/toggle-active`),
+};
+
+// Admin Departments
+export const adminDepartmentsApi = {
+  list: () => api.get('/admin/departments'),
+  create: (data) => api.post('/admin/departments', data),
+  update: (id, data) => api.put(`/admin/departments/${id}`, data),
+  delete: (id) => api.delete(`/admin/departments/${id}`),
+  toggleActive: (id) => api.put(`/admin/departments/${id}/toggle-active`),
+};
+
+// Admin Classes
+export const adminClassesApi = {
+  list: (departmentId) => api.get('/admin/classes', { params: departmentId ? { department_id: departmentId } : {} }),
+  create: (data) => api.post('/admin/classes', data),
+  update: (id, data) => api.put(`/admin/classes/${id}`, data),
+  delete: (id) => api.delete(`/admin/classes/${id}`),
+  toggleActive: (id) => api.put(`/admin/classes/${id}/toggle-active`),
 };
 
 export default api;

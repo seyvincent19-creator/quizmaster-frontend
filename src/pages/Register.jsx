@@ -1,23 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { departmentsApi, classesApi } from '../lib/api';
 import toast from 'react-hot-toast';
 import Spinner from '../components/ui/Spinner';
 
 export default function Register() {
-  const [form, setForm] = useState({ name: '', class_name: '', generation: '', email: '', password: '', password_confirmation: '' });
+  const [form, setForm] = useState({ name: '', department_id: '', class_id: '', email: '', password: '', password_confirmation: '' });
   const [errors, setErrors] = useState({});
+  const [departments, setDepartments] = useState([]);
+  const [classes, setClasses] = useState([]);
   const { register, loading } = useAuthStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    departmentsApi.list().then(res => setDepartments(res.data.data)).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!form.department_id) {
+      setClasses([]);
+      return;
+    }
+    classesApi.list(form.department_id).then(res => setClasses(res.data.data)).catch(() => {});
+  }, [form.department_id]);
 
   const handleChange = (e) => {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
     setErrors(e2 => ({ ...e2, [e.target.name]: null }));
   };
 
+  const handleDepartmentChange = (e) => {
+    setForm(f => ({ ...f, department_id: e.target.value, class_id: '' }));
+    setErrors(e2 => ({ ...e2, department_id: null, class_id: null }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await register(form);
+    const { department_id, ...payload } = form;
+    const result = await register(payload);
     if (result.success) {
       toast.success('Account created! Welcome to QuizMaster!');
       navigate('/dashboard');
@@ -49,16 +70,22 @@ export default function Register() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label">Class</label>
-                <input name="class_name" type="text" value={form.class_name} onChange={handleChange}
-                  className={`input ${errors.class_name ? 'border-red-400' : ''}`} placeholder="e.g. 10A" />
-                {errors.class_name && <p className="text-red-500 text-xs mt-1">{errors.class_name[0]}</p>}
+                <label className="label">Department</label>
+                <select name="department_id" value={form.department_id} onChange={handleDepartmentChange}
+                  className={`input ${errors.department_id ? 'border-red-400' : ''}`}>
+                  <option value="">Select department</option>
+                  {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+                {errors.department_id && <p className="text-red-500 text-xs mt-1">{errors.department_id[0]}</p>}
               </div>
               <div>
-                <label className="label">Generation</label>
-                <input name="generation" type="text" value={form.generation} onChange={handleChange}
-                  className={`input ${errors.generation ? 'border-red-400' : ''}`} placeholder="e.g. 2025" />
-                {errors.generation && <p className="text-red-500 text-xs mt-1">{errors.generation[0]}</p>}
+                <label className="label">Class</label>
+                <select name="class_id" value={form.class_id} onChange={handleChange} disabled={!form.department_id}
+                  className={`input ${errors.class_id ? 'border-red-400' : ''}`}>
+                  <option value="">{form.department_id ? 'Select class' : 'Select department first'}</option>
+                  {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                {errors.class_id && <p className="text-red-500 text-xs mt-1">{errors.class_id[0]}</p>}
               </div>
             </div>
 

@@ -1,13 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '../../components/AdminLayout';
-import { adminUsersApi } from '../../lib/api';
+import { adminUsersApi, adminDepartmentsApi, adminClassesApi } from '../../lib/api';
 import toast from 'react-hot-toast';
 import Modal from '../../components/ui/Modal';
 import Pagination from '../../components/ui/Pagination';
 import Spinner from '../../components/ui/Spinner';
 import { SkeletonTable } from '../../components/ui/SkeletonCard';
 
-const EMPTY_FORM = { name: '', email: '', password: '', password_confirmation: '', class_name: '', generation: '' };
+const EMPTY_FORM = { name: '', email: '', password: '', password_confirmation: '', department_id: '', class_id: '' };
+
+// The admin users list returns raw models (nested `school_class`), while create/edit
+// responses go through UserResource (flat `class_name`/`generation`/etc). Resolve both shapes.
+const getClassName = (user) => (user.class_name !== undefined ? user.class_name : user.school_class?.name);
+const getYearOfStudy = (user) => (user.year_of_study !== undefined ? user.year_of_study : user.school_class?.year_of_study);
+const getGeneration = (user) => (user.generation !== undefined ? user.generation : user.school_class?.generation);
+const getDepartmentName = (user) => (user.department_name !== undefined ? user.department_name : user.school_class?.department?.name);
+const getDepartmentId = (user) => (user.department_id !== undefined ? user.department_id : user.school_class?.department_id);
 
 export default function Students() {
   const [users, setUsers] = useState([]);
@@ -16,10 +24,10 @@ export default function Students() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('');
   const [classFilter, setClassFilter] = useState('');
-  const [generationFilter, setGenerationFilter] = useState('');
-  const [classOptions, setClassOptions] = useState([]);
-  const [generationOptions, setGenerationOptions] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [filterClasses, setFilterClasses] = useState([]);
   const [togglingId, setTogglingId] = useState(null);
 
   // Attempts modal
@@ -32,6 +40,7 @@ export default function Students() {
   const [formModal, setFormModal] = useState(false);   // 'create' | 'edit' | false
   const [editTarget, setEditTarget] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [formClasses, setFormClasses] = useState([]);
   const [formErrors, setFormErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
@@ -43,7 +52,7 @@ export default function Students() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await adminUsersApi.list({ page, search, status: statusFilter, class_name: classFilter, generation: generationFilter });
+      const res = await adminUsersApi.list({ page, search, status: statusFilter, department_id: departmentFilter, class_id: classFilter });
       setUsers(res.data.data);
       setMeta(res.data.meta);
     } catch {
@@ -51,14 +60,28 @@ export default function Students() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, statusFilter, classFilter, generationFilter]);
+  }, [page, search, statusFilter, departmentFilter, classFilter]);
 
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
-    adminUsersApi.classOptions().then(r => setClassOptions(r.data)).catch(() => {});
-    adminUsersApi.generationOptions().then(r => setGenerationOptions(r.data)).catch(() => {});
+    adminDepartmentsApi.list().then(r => setDepartments(r.data.data)).catch(() => {});
   }, []);
+
+  // Filter: Class dropdown cascades from the selected Department filter
+  useEffect(() => {
+    if (!departmentFilter) {
+      setFilterClasses([]);
+      return;
+    }
+    adminClassesApi.list(departmentFilter).then(r => setFilterClasses(r.data.data)).catch(() => {});
+  }, [departmentFilter]);
+
+  const handleDepartmentFilterChange = (value) => {
+    setDepartmentFilter(value);
+    setClassFilter('');
+    setPage(1);
+  };
 
   // ── attempts modal ─────────────────────────────────────────
   const loadUserAttempts = async (user, p = 1) => {
@@ -93,20 +116,26 @@ export default function Students() {
   const openCreate = () => {
     setEditTarget(null);
     setForm(EMPTY_FORM);
+    setFormClasses([]);
     setFormErrors({});
     setFormModal('create');
   };
 
   const openEdit = (user) => {
+    const deptId = getDepartmentId(user) || '';
     setEditTarget(user);
     setForm({
       name: user.name || '',
       email: user.email || '',
       password: '',
       password_confirmation: '',
-      class_name: user.class_name || '',
-      generation: user.generation || '',
+      department_id: deptId,
+      class_id: user.class_id || '',
     });
+    setFormClasses([]);
+    if (deptId) {
+      adminClassesApi.list(deptId).then(r => setFormClasses(r.data.data)).catch(() => {});
+    }
     setFormErrors({});
     setFormModal('edit');
   };
@@ -116,21 +145,30 @@ export default function Students() {
     setFormErrors(err => ({ ...err, [e.target.name]: null }));
   };
 
+  const handleFormDepartmentChange = (e) => {
+    const value = e.target.value;
+    setForm(f => ({ ...f, department_id: value, class_id: '' }));
+    setFormErrors(err => ({ ...err, department_id: null, class_id: null }));
+    if (value) {
+      adminClassesApi.list(value).then(r => setFormClasses(r.data.data)).catch(() => {});
+    } else {
+      setFormClasses([]);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setFormErrors({});
+    const { department_id, ...payload } = form;
     try {
       if (formModal === 'create') {
-        const res = await adminUsersApi.create(form);
+        const res = await adminUsersApi.create(payload);
         toast.success(res.data.message);
         setFormModal(false);
         setPage(1);
         load();
-        // Refresh filter options
-        adminUsersApi.classOptions().then(r => setClassOptions(r.data)).catch(() => {});
-        adminUsersApi.generationOptions().then(r => setGenerationOptions(r.data)).catch(() => {});
       } else {
-        const res = await adminUsersApi.update(editTarget.id, form);
+        const res = await adminUsersApi.update(editTarget.id, payload);
         toast.success(res.data.message);
         setUsers(prev => prev.map(u => u.id === editTarget.id ? { ...u, ...res.data.data } : u));
         setFormModal(false);
@@ -193,13 +231,13 @@ export default function Students() {
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
-            <select className="input w-36" value={classFilter} onChange={e => { setClassFilter(e.target.value); setPage(1); }}>
-              <option value="">All Classes</option>
-              {classOptions.map(c => <option key={c} value={c}>{c}</option>)}
+            <select className="input w-40" value={departmentFilter} onChange={e => handleDepartmentFilterChange(e.target.value)}>
+              <option value="">All Departments</option>
+              {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
-            <select className="input w-36" value={generationFilter} onChange={e => { setGenerationFilter(e.target.value); setPage(1); }}>
-              <option value="">All Generations</option>
-              {generationOptions.map(g => <option key={g} value={g}>{g}</option>)}
+            <select className="input w-36" value={classFilter} onChange={e => { setClassFilter(e.target.value); setPage(1); }} disabled={!departmentFilter}>
+              <option value="">All Classes</option>
+              {filterClasses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
         </div>
@@ -215,7 +253,9 @@ export default function Students() {
                       <th className="text-left py-3 px-4 font-semibold text-gray-600">#</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-600">Student Name</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-600">Email</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-600">Department</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-600">Class</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-600">Year of Study</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-600">Generation</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-600">Attempts</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-600">Status</th>
@@ -226,7 +266,7 @@ export default function Students() {
                   <tbody>
                     {users.length === 0 ? (
                       <tr>
-                        <td colSpan={9} className="py-10 text-center text-gray-400">No students found.</td>
+                        <td colSpan={11} className="py-10 text-center text-gray-400">No students found.</td>
                       </tr>
                     ) : users.map((user, i) => (
                       <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
@@ -240,8 +280,10 @@ export default function Students() {
                           </div>
                         </td>
                         <td className="py-3 px-4 text-gray-500">{user.email}</td>
-                        <td className="py-3 px-4 text-gray-500">{user.class_name || <span className="text-gray-300">—</span>}</td>
-                        <td className="py-3 px-4 text-gray-500">{user.generation || <span className="text-gray-300">—</span>}</td>
+                        <td className="py-3 px-4 text-gray-500">{getDepartmentName(user) || <span className="text-gray-300">—</span>}</td>
+                        <td className="py-3 px-4 text-gray-500">{getClassName(user) || <span className="text-gray-300">—</span>}</td>
+                        <td className="py-3 px-4 text-gray-500">{getYearOfStudy(user) || <span className="text-gray-300">—</span>}</td>
+                        <td className="py-3 px-4 text-gray-500">{getGeneration(user) || <span className="text-gray-300">—</span>}</td>
                         <td className="py-3 px-4">
                           <button
                             onClick={() => loadUserAttempts(user)}
@@ -336,33 +378,29 @@ export default function Students() {
             {formErrors.email && <p className="text-red-500 text-xs mt-1">{formErrors.email[0]}</p>}
           </div>
 
-          {/* Class + Generation side-by-side */}
+          {/* Department + Class side-by-side */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">Class</label>
-              <input
-                name="class_name" type="text" value={form.class_name} onChange={handleFormChange}
-                className={`input ${formErrors.class_name ? 'border-red-400' : ''}`}
-                placeholder="e.g. 10A"
-                list="class-options-list"
-              />
-              <datalist id="class-options-list">
-                {classOptions.map(c => <option key={c} value={c} />)}
-              </datalist>
-              {formErrors.class_name && <p className="text-red-500 text-xs mt-1">{formErrors.class_name[0]}</p>}
+              <label className="label">Department</label>
+              <select
+                name="department_id" value={form.department_id} onChange={handleFormDepartmentChange}
+                className={`input ${formErrors.department_id ? 'border-red-400' : ''}`}
+              >
+                <option value="">Select department</option>
+                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+              {formErrors.department_id && <p className="text-red-500 text-xs mt-1">{formErrors.department_id[0]}</p>}
             </div>
             <div>
-              <label className="label">Generation</label>
-              <input
-                name="generation" type="text" value={form.generation} onChange={handleFormChange}
-                className={`input ${formErrors.generation ? 'border-red-400' : ''}`}
-                placeholder="e.g. 2025"
-                list="generation-options-list"
-              />
-              <datalist id="generation-options-list">
-                {generationOptions.map(g => <option key={g} value={g} />)}
-              </datalist>
-              {formErrors.generation && <p className="text-red-500 text-xs mt-1">{formErrors.generation[0]}</p>}
+              <label className="label">Class</label>
+              <select
+                name="class_id" value={form.class_id} onChange={handleFormChange} disabled={!form.department_id}
+                className={`input ${formErrors.class_id ? 'border-red-400' : ''}`}
+              >
+                <option value="">{form.department_id ? 'Select class' : 'Select department first'}</option>
+                {formClasses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+              {formErrors.class_id && <p className="text-red-500 text-xs mt-1">{formErrors.class_id[0]}</p>}
             </div>
           </div>
 

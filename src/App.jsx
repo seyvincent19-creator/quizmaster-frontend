@@ -14,6 +14,8 @@ import MyReport from './pages/MyReport';
 import AdminLogin from './pages/admin/Login';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminSubjects from './pages/admin/Subjects';
+import AdminDepartments from './pages/admin/Departments';
+import AdminClasses from './pages/admin/Classes';
 import AdminQuestions from './pages/admin/Questions';
 import AdminUsers from './pages/admin/Users';
 import AdminReports from './pages/admin/Reports';
@@ -54,6 +56,8 @@ export default function App() {
         {/* Admin routes */}
         <Route path="/admin/dashboard" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
         <Route path="/admin/subjects" element={<AdminProtectedRoute><AdminSubjects /></AdminProtectedRoute>} />
+        <Route path="/admin/departments" element={<AdminProtectedRoute><AdminDepartments /></AdminProtectedRoute>} />
+        <Route path="/admin/classes" element={<AdminProtectedRoute><AdminClasses /></AdminProtectedRoute>} />
         <Route path="/admin/questions" element={<AdminProtectedRoute><AdminQuestions /></AdminProtectedRoute>} />
         <Route path="/admin/users" element={<AdminProtectedRoute><AdminUsers /></AdminProtectedRoute>} />
         <Route path="/admin/reports" element={<AdminProtectedRoute><AdminReports /></AdminProtectedRoute>} />
