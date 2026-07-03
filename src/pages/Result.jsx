@@ -58,7 +58,7 @@ export default function Result() {
   const isPassed = attempt.score >= 50;
   const percentage = Math.round((attempt.score / attempt.total_questions) * 100);
 
-  const filteredAnswers = answers.filter(a => {
+  const filteredAnswers = (answers || []).filter(a => {
     if (filter === 'correct') return a.is_correct;
     if (filter === 'incorrect') return !a.is_correct && a.selected_choice;
     if (filter === 'unanswered') return !a.selected_choice;
@@ -132,6 +132,7 @@ export default function Result() {
       </div>
 
       {/* Answer Review */}
+      {answers && (
       <div className="card">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Answer Review</h2>
@@ -214,6 +215,7 @@ export default function Result() {
           ))}
         </div>
       </div>
+      )}
     </Layout>
   );
 }
