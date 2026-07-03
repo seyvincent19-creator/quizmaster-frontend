@@ -5,6 +5,7 @@ import Layout from '../components/Layout';
 import toast from 'react-hot-toast';
 import Spinner from '../components/ui/Spinner';
 import SkeletonCard from '../components/ui/SkeletonCard';
+import { PartyPopper, XCircle, ArrowLeft, FileDown, FileSpreadsheet, Check, X, Minus } from 'lucide-react';
 
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
@@ -68,13 +69,14 @@ export default function Result() {
   return (
     <Layout>
       {/* Result Header */}
-      <div className={`rounded-2xl p-8 text-white mb-6 ${isPassed ? 'bg-gradient-to-r from-green-500 to-emerald-600' : 'bg-gradient-to-r from-red-500 to-rose-600'}`}>
+      <div className={`rounded-2xl p-8 text-white mb-6 shadow-soft-lg animate-slide-up ${isPassed ? 'bg-gradient-to-r from-green-500 to-emerald-600' : 'bg-gradient-to-r from-red-500 to-rose-600'}`}>
         <div className="flex flex-col md:flex-row items-center gap-6">
           <div className="text-center">
             <div className="text-8xl font-bold mb-1">{attempt.score}</div>
             <div className="text-white/80 text-lg">out of {attempt.total_questions}</div>
-            <div className={`mt-2 inline-block px-4 py-1 rounded-full font-bold text-sm ${isPassed ? 'bg-white text-green-600' : 'bg-white text-red-600'}`}>
-              {isPassed ? '🎉 PASSED' : '❌ FAILED'}
+            <div className={`mt-2 inline-flex items-center gap-1.5 px-4 py-1 rounded-full font-bold text-sm ${isPassed ? 'bg-white text-green-600' : 'bg-white text-red-600'}`}>
+              {isPassed ? <PartyPopper className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+              {isPassed ? 'PASSED' : 'FAILED'}
             </div>
           </div>
 
@@ -89,25 +91,25 @@ export default function Result() {
         <div className="mt-6 flex flex-wrap gap-3">
           <button
             onClick={() => navigate('/dashboard')}
-            className="bg-white/20 hover:bg-white/30 px-5 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="bg-white/20 hover:bg-white/30 px-5 py-2 rounded-lg text-sm font-medium transition-all active:scale-[0.98] flex items-center gap-2"
           >
-            ← Dashboard
+            <ArrowLeft className="w-4 h-4" /> Dashboard
           </button>
           <button
             onClick={() => handleDownload('pdf')}
             disabled={downloadingPdf}
-            className="bg-white/20 hover:bg-white/30 px-5 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+            className="bg-white/20 hover:bg-white/30 px-5 py-2 rounded-lg text-sm font-medium transition-all active:scale-[0.98] flex items-center gap-2"
           >
-            {downloadingPdf ? <Spinner size="sm" /> : null}
-            📄 Download PDF
+            {downloadingPdf ? <Spinner size="sm" /> : <FileDown className="w-4 h-4" />}
+            Download PDF
           </button>
           <button
             onClick={() => handleDownload('excel')}
             disabled={downloadingExcel}
-            className="bg-white/20 hover:bg-white/30 px-5 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+            className="bg-white/20 hover:bg-white/30 px-5 py-2 rounded-lg text-sm font-medium transition-all active:scale-[0.98] flex items-center gap-2"
           >
-            {downloadingExcel ? <Spinner size="sm" /> : null}
-            📊 Download Excel
+            {downloadingExcel ? <Spinner size="sm" /> : <FileSpreadsheet className="w-4 h-4" />}
+            Download Excel
           </button>
         </div>
       </div>
@@ -142,7 +144,7 @@ export default function Result() {
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                  filter === f ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  filter === f ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -168,10 +170,10 @@ export default function Result() {
                 </p>
                 <div className="flex-shrink-0">
                   {a.is_correct
-                    ? <span className="badge badge-green">✓ Correct</span>
+                    ? <span className="badge badge-green"><Check className="w-3 h-3" /> Correct</span>
                     : !a.selected_choice
-                    ? <span className="badge badge-gray">— Skipped</span>
-                    : <span className="badge badge-red">✗ Wrong</span>
+                    ? <span className="badge badge-gray"><Minus className="w-3 h-3" /> Skipped</span>
+                    : <span className="badge badge-red"><X className="w-3 h-3" /> Wrong</span>
                   }
                 </div>
               </div>
@@ -195,8 +197,8 @@ export default function Result() {
                     >
                       <span className="font-bold w-5">{choice}.</span>
                       <span className="flex-1 truncate">{a[choiceKey]}</span>
-                      {isCorrect && <span>✓</span>}
-                      {isUserChoice && !isCorrect && <span>✗</span>}
+                      {isCorrect && <Check className="w-4 h-4 flex-shrink-0" />}
+                      {isUserChoice && !isCorrect && <X className="w-4 h-4 flex-shrink-0" />}
                     </div>
                   );
                 })}

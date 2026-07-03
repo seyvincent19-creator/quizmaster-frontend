@@ -3,6 +3,7 @@ import Layout from '../components/Layout';
 import { useAuthStore } from '../stores/authStore';
 import toast from 'react-hot-toast';
 import Spinner from '../components/ui/Spinner';
+import { User, Lock } from 'lucide-react';
 
 export default function Profile() {
   const { user, updateProfile, changePassword, loading } = useAuthStore();
@@ -43,7 +44,9 @@ export default function Profile() {
 
         {/* Profile Info */}
         <div className="card">
-          <h2 className="text-lg font-semibold mb-4 pb-3 border-b">Personal Information</h2>
+          <h2 className="text-lg font-semibold mb-4 pb-3 border-b flex items-center gap-2">
+            <User className="w-5 h-5 text-primary-600" /> Personal Information
+          </h2>
           <form onSubmit={handleProfileSave} className="space-y-4">
             <div>
               <label className="label">Full Name</label>
@@ -71,7 +74,9 @@ export default function Profile() {
 
         {/* Change Password */}
         <div className="card">
-          <h2 className="text-lg font-semibold mb-4 pb-3 border-b">Change Password</h2>
+          <h2 className="text-lg font-semibold mb-4 pb-3 border-b flex items-center gap-2">
+            <Lock className="w-5 h-5 text-primary-600" /> Change Password
+          </h2>
           <form onSubmit={handlePasswordChange} className="space-y-4">
             <div>
               <label className="label">Current Password</label>

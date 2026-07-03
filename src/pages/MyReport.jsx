@@ -7,6 +7,8 @@ import Spinner from '../components/ui/Spinner';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
+import StatCard from '../components/ui/StatCard';
+import { LineChart, FileText, CheckCircle2, XCircle, Trophy, TrendingUp, Check, Target, X } from 'lucide-react';
 
 export default function MyReport() {
   const navigate = useNavigate();
@@ -32,7 +34,7 @@ export default function MyReport() {
     return (
       <Layout>
         <div className="text-center py-20">
-          <div className="text-6xl mb-4">📊</div>
+          <LineChart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-700 mb-2">No data yet</h2>
           <p className="text-gray-500 mb-6">Complete at least one quiz to see your report.</p>
           <button onClick={() => navigate('/dashboard')} className="btn-primary px-6 py-2.5">
@@ -56,14 +58,14 @@ export default function MyReport() {
 
       {/* Overview stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Total Quizzes" value={stats.total_attempts} icon="📝" color="blue" />
-        <StatCard label="Passed" value={stats.passed} sub={`${stats.pass_rate}% pass rate`} icon="✅" color="green" />
-        <StatCard label="Failed" value={stats.failed} icon="❌" color="red" />
-        <StatCard label="Best Score" value={`${stats.best_score}`} sub="out of 100" icon="🏆" color="yellow" />
-        <StatCard label="Avg Score" value={`${stats.avg_score}`} sub="out of 100" icon="📈" color="blue" />
-        <StatCard label="Total Correct" value={stats.total_correct} sub={`of ${stats.total_answered} answered`} icon="✓" color="green" />
-        <StatCard label="Accuracy" value={`${accuracyPct}%`} sub="correct answers" icon="🎯" color="indigo" />
-        <StatCard label="Total Wrong" value={stats.total_answered - stats.total_correct} icon="✗" color="red" />
+        <StatCard label="Total Quizzes" value={stats.total_attempts} icon={FileText} tone="blue" />
+        <StatCard label="Passed" value={stats.passed} sub={`${stats.pass_rate}% pass rate`} icon={CheckCircle2} tone="green" />
+        <StatCard label="Failed" value={stats.failed} icon={XCircle} tone="red" />
+        <StatCard label="Best Score" value={`${stats.best_score}`} sub="out of 100" icon={Trophy} tone="yellow" />
+        <StatCard label="Avg Score" value={`${stats.avg_score}`} sub="out of 100" icon={TrendingUp} tone="blue" />
+        <StatCard label="Total Correct" value={stats.total_correct} sub={`of ${stats.total_answered} answered`} icon={Check} tone="green" />
+        <StatCard label="Accuracy" value={`${accuracyPct}%`} sub="correct answers" icon={Target} tone="indigo" />
+        <StatCard label="Total Wrong" value={stats.total_answered - stats.total_correct} icon={X} tone="red" />
       </div>
 
       {/* Score trend chart */}
@@ -80,7 +82,7 @@ export default function MyReport() {
                 labelFormatter={(label, payload) => payload?.[0]?.payload?.subject || label}
               />
               <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="4 4" label={{ value: 'Pass', position: 'right', fontSize: 11, fill: '#f59e0b' }} />
-              <Bar dataKey="score" fill="#3b82f6" radius={[4, 4, 0, 0]}
+              <Bar dataKey="score" fill="#2563eb" radius={[4, 4, 0, 0]}
                 label={{ position: 'top', fontSize: 10, fill: '#6b7280' }} />
             </BarChart>
           </ResponsiveContainer>
@@ -113,7 +115,7 @@ export default function MyReport() {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-center">
-                      <span className="font-semibold text-blue-600">{row.best_score}</span>
+                      <span className="font-semibold text-primary-600">{row.best_score}</span>
                     </td>
                     <td className="py-3 px-4 text-center">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
@@ -130,25 +132,5 @@ export default function MyReport() {
         </div>
       )}
     </Layout>
-  );
-}
-
-function StatCard({ label, value, sub, icon, color }) {
-  const colors = {
-    blue: 'bg-blue-50 text-blue-600',
-    green: 'bg-green-50 text-green-600',
-    red: 'bg-red-50 text-red-500',
-    yellow: 'bg-yellow-50 text-yellow-600',
-    indigo: 'bg-indigo-50 text-indigo-600',
-  };
-  return (
-    <div className="card py-4 text-center">
-      <div className={`text-2xl mb-1 w-10 h-10 rounded-full ${colors[color]} flex items-center justify-center mx-auto font-bold`}>
-        {icon}
-      </div>
-      <div className="text-2xl font-bold text-gray-900 mt-2">{value}</div>
-      <div className="text-xs text-gray-500 mt-0.5">{label}</div>
-      {sub && <div className="text-xs text-gray-400 mt-0.5">{sub}</div>}
-    </div>
   );
 }

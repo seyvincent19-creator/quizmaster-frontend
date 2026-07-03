@@ -9,6 +9,8 @@ import Spinner from '../components/ui/Spinner';
 import { SkeletonTable } from '../components/ui/SkeletonCard';
 import Pagination from '../components/ui/Pagination';
 import Modal from '../components/ui/Modal';
+import StatCard from '../components/ui/StatCard';
+import { FileText, Trophy, BarChart3, CheckCircle2, BookOpen } from 'lucide-react';
 
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
@@ -113,13 +115,13 @@ export default function Dashboard() {
   return (
     <Layout>
       {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white mb-8">
-        <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.name?.split(' ')[0]}! 👋</h1>
+      <div className="bg-gradient-to-r from-primary-600 to-indigo-600 rounded-2xl p-8 text-white mb-8 shadow-soft-lg">
+        <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.name?.split(' ')[0]}!</h1>
         <p className="text-blue-100 mb-6">Ready to test your knowledge? Each quiz has 100 questions with 60 seconds per question.</p>
         <button
           onClick={openSubjectModal}
           disabled={quizLoading}
-          className="bg-white text-blue-700 font-semibold px-8 py-3 rounded-xl hover:bg-blue-50 transition-colors disabled:opacity-70 flex items-center gap-2"
+          className="bg-white text-primary-700 font-semibold px-8 py-3 rounded-xl hover:bg-blue-50 transition-all active:scale-[0.98] disabled:opacity-70 flex items-center gap-2"
         >
           {quizLoading ? <Spinner size="sm" /> : null}
           Start New Quiz
@@ -129,13 +131,14 @@ export default function Dashboard() {
       {/* Stats row */}
       {!historyLoading && meta && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatCard label="Total Attempts" value={meta.total} icon="📝" />
+          <StatCard label="Total Attempts" value={meta.total} icon={FileText} tone="blue" />
           <StatCard
             label="Best Score"
             value={history.filter(h => h.status === 'completed').length > 0
               ? Math.max(...history.filter(h => h.status === 'completed').map(h => h.score)) + '/100'
               : 'N/A'}
-            icon="🏆"
+            icon={Trophy}
+            tone="yellow"
           />
           <StatCard
             label="Avg Score"
@@ -144,7 +147,8 @@ export default function Dashboard() {
                 ? Math.round(history.filter(h => h.status === 'completed').reduce((a, b) => a + b.score, 0) / history.filter(h => h.status === 'completed').length) + '/100'
                 : 'N/A'
             }
-            icon="📊"
+            icon={BarChart3}
+            tone="indigo"
           />
           <StatCard
             label="Pass Rate"
@@ -153,7 +157,8 @@ export default function Dashboard() {
                 ? Math.round((history.filter(h => h.score >= 50 && h.status === 'completed').length / history.filter(h => h.status === 'completed').length) * 100) + '%'
                 : 'N/A'
             }
-            icon="✅"
+            icon={CheckCircle2}
+            tone="green"
           />
         </div>
       )}
@@ -166,7 +171,7 @@ export default function Dashboard() {
           <SkeletonTable rows={5} cols={5} />
         ) : history.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-5xl mb-3">📚</div>
+            <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">No quiz attempts yet. Start your first quiz!</p>
           </div>
         ) : (
@@ -264,7 +269,6 @@ export default function Dashboard() {
                   key={s.id}
                   selected={selectedSubjectId === s.id}
                   onClick={() => setSelectedSubjectId(s.id)}
-                  icon="📚"
                   name={s.name}
                   description={s.description}
                   count={s.active_questions_count}
@@ -279,33 +283,25 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ label, value, icon }) {
-  return (
-    <div className="card text-center py-4">
-      <div className="text-2xl mb-1">{icon}</div>
-      <div className="text-2xl font-bold text-gray-900">{value}</div>
-      <div className="text-xs text-gray-500 mt-1">{label}</div>
-    </div>
-  );
-}
-
-function SubjectCard({ selected, onClick, icon, name, description, countLabel }) {
+function SubjectCard({ selected, onClick, name, description, countLabel }) {
   return (
     <button
       onClick={onClick}
       className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all duration-150 ${
         selected
-          ? 'border-blue-500 bg-blue-50'
-          : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+          ? 'border-primary-500 bg-primary-50'
+          : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
       }`}
     >
       <div className="flex items-center gap-3">
-        <span className="text-2xl">{icon}</span>
+        <span className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${selected ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-500'}`}>
+          <BookOpen className="w-4 h-4" />
+        </span>
         <div className="flex-1 min-w-0">
-          <p className={`font-semibold text-sm ${selected ? 'text-blue-800' : 'text-gray-800'}`}>{name}</p>
+          <p className={`font-semibold text-sm ${selected ? 'text-primary-800' : 'text-gray-800'}`}>{name}</p>
           {description && <p className="text-xs text-gray-500 truncate">{description}</p>}
         </div>
-        <span className={`text-xs font-medium flex-shrink-0 ${selected ? 'text-blue-600' : 'text-gray-400'}`}>
+        <span className={`text-xs font-medium flex-shrink-0 ${selected ? 'text-primary-600' : 'text-gray-400'}`}>
           {countLabel}
         </span>
       </div>

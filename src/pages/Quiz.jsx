@@ -4,6 +4,7 @@ import { useQuizStore } from '../stores/quizStore';
 import toast from 'react-hot-toast';
 import Spinner from '../components/ui/Spinner';
 import Modal from '../components/ui/Modal';
+import { Clock, ChevronLeft, ChevronRight, CheckCircle2, ClipboardCheck } from 'lucide-react';
 
 const TIMER_SECONDS = 60;
 
@@ -180,7 +181,7 @@ export default function Quiz() {
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">Q</span>
               </div>
               <div>
@@ -193,9 +194,7 @@ export default function Quiz() {
 
             {/* Timer */}
             <div className={`flex items-center gap-2 ${timerTextColor}`}>
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <Clock className="w-5 h-5" />
               <span className="text-xl tabular-nums">{String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}</span>
             </div>
 
@@ -211,7 +210,7 @@ export default function Quiz() {
           {/* Progress bar */}
           <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-blue-500 rounded-full transition-all duration-300"
+              className="h-full bg-primary-500 rounded-full transition-all duration-300"
               style={{ width: `${progressPct}%` }}
             />
           </div>
@@ -264,13 +263,13 @@ export default function Quiz() {
                       disabled={isDisabled}
                       className={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all duration-150 ${
                         isSelected
-                          ? 'border-blue-500 bg-blue-50 text-blue-900'
+                          ? 'border-primary-500 bg-primary-50 text-primary-900'
                           : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700'
                       } ${isDisabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
                     >
                       <div className="flex items-start gap-3">
                         <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
-                          isSelected ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
+                          isSelected ? 'bg-primary-500 text-white' : 'bg-gray-200 text-gray-600'
                         }`}>{choice}</span>
                         <span className="flex-1 leading-relaxed">{currentQuestion[choiceKey]}</span>
                       </div>
@@ -294,7 +293,7 @@ export default function Quiz() {
                   disabled={currentIndex === 0}
                   className="btn-secondary px-5 py-2.5 disabled:opacity-40"
                 >
-                  ← Previous
+                  <ChevronLeft className="w-4 h-4" /> Previous
                 </button>
 
                 {!isLastQuestion ? (
@@ -302,14 +301,14 @@ export default function Quiz() {
                     onClick={handleLockAndNext}
                     className="btn-primary px-5 py-2.5 ml-auto"
                   >
-                    {isLocked ? 'Next →' : 'Confirm & Next →'}
+                    {isLocked ? 'Next' : 'Confirm & Next'} <ChevronRight className="w-4 h-4" />
                   </button>
                 ) : (
                   <button
                     onClick={() => setShowFinishModal(true)}
                     className="btn-success px-5 py-2.5 ml-auto"
                   >
-                    Submit Quiz ✓
+                    <CheckCircle2 className="w-4 h-4" /> Submit Quiz
                   </button>
                 )}
               </div>
@@ -333,7 +332,7 @@ export default function Quiz() {
                       onClick={() => useQuizStore.getState().goToQuestion(idx)}
                       className={`w-8 h-8 rounded-md text-xs font-medium transition-all ${
                         isCurrent
-                          ? 'bg-blue-600 text-white ring-2 ring-blue-300'
+                          ? 'bg-primary-600 text-white ring-2 ring-primary-300'
                           : isAnswered
                           ? 'bg-green-500 text-white'
                           : isUnanswered
@@ -377,7 +376,7 @@ export default function Quiz() {
         }
       >
         <div className="text-center py-2">
-          <div className="text-4xl mb-3">📋</div>
+          <ClipboardCheck className="w-12 h-12 text-primary-500 mx-auto mb-3" strokeWidth={1.75} />
           <p className="text-gray-700 mb-4">Are you sure you want to submit your quiz?</p>
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="bg-green-50 rounded-lg p-3">
