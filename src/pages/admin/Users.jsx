@@ -270,7 +270,7 @@ export default function Students() {
                       </tr>
                     ) : users.map((user, i) => (
                       <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4 text-gray-400">{((page - 1) * 20) + i + 1}</td>
+                        <td className="py-3 px-4 text-gray-400">{((page - 1) * (meta?.per_page ?? 10)) + i + 1}</td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">
