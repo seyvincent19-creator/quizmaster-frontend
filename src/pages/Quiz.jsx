@@ -22,6 +22,11 @@ export default function Quiz() {
   const [timeTakenRef] = useState({ value: 0 });
   const timerRef = useRef(null);
   const lockedForCurrentQ = useRef(false);
+  const timeLeftRef = useRef(TIMER_SECONDS);
+  // Seconds already spent on each not-yet-locked question across earlier visits,
+  // so the countdown resumes instead of restarting at 60 when a skipped question is revisited.
+  const elapsedByQuestionRef = useRef({});
+  const activeQuestionIdRef = useRef(null);
 
   const currentQuestion = questions[currentIndex];
   const currentAnswer = currentQuestion ? answers[currentQuestion.id] : null;
@@ -68,22 +73,40 @@ export default function Quiz() {
     }
 
     lockedForCurrentQ.current = false;
-    setTimeLeft(TIMER_SECONDS);
-    timeTakenRef.value = 0;
+    activeQuestionIdRef.current = currentQuestion.id;
+
+    // Resume from however much time was already spent on this question in earlier visits
+    const alreadyElapsed = elapsedByQuestionRef.current[currentQuestion.id] || 0;
+    const remaining = Math.max(TIMER_SECONDS - alreadyElapsed, 0);
+    timeTakenRef.value = alreadyElapsed;
+    setTimeLeft(remaining);
+    timeLeftRef.current = remaining;
+
+    if (remaining <= 0) {
+      handleTimerEnd();
+      return;
+    }
 
     timerRef.current = setInterval(() => {
       timeTakenRef.value += 1;
       setTimeLeft(prev => {
+        const next = prev <= 1 ? 0 : prev - 1;
+        timeLeftRef.current = next;
         if (prev <= 1) {
           clearInterval(timerRef.current);
           handleTimerEnd();
-          return 0;
         }
-        return prev - 1;
+        return next;
       });
     }, 1000);
 
-    return () => clearInterval(timerRef.current);
+    return () => {
+      clearInterval(timerRef.current);
+      // Leaving without locking (Previous / navigator jump) — save progress so it resumes next visit
+      if (activeQuestionIdRef.current != null && !lockedForCurrentQ.current) {
+        elapsedByQuestionRef.current[activeQuestionIdRef.current] = TIMER_SECONDS - timeLeftRef.current;
+      }
+    };
   }, [currentIndex, currentQuestion?.id]);
 
   const handleSelectChoice = (choice) => {
