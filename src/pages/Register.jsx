@@ -35,8 +35,54 @@ export default function Register() {
     setErrors(e2 => ({ ...e2, department_id: null, class_id: null }));
   };
 
+  const validate = () => {
+    const newErrors = {};
+
+    if (!form.name.trim()) {
+      newErrors.name = ['Full name is required.'];
+    } else if (form.name.trim().length < 2) {
+      newErrors.name = ['Full name must be at least 2 characters.'];
+    }
+
+    if (!form.department_id) {
+      newErrors.department_id = ['Please select a department.'];
+    }
+
+    if (!form.class_id) {
+      newErrors.class_id = ['Please select a class.'];
+    }
+
+    if (!form.email.trim()) {
+      newErrors.email = ['Email is required.'];
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      newErrors.email = ['Please enter a valid email address.'];
+    }
+
+    if (!form.password) {
+      newErrors.password = ['Password is required.'];
+    } else if (form.password.length < 8) {
+      newErrors.password = ['Password must be at least 8 characters.'];
+    }
+
+    if (!form.password_confirmation) {
+      newErrors.password_confirmation = ['Please confirm your password.'];
+    } else if (form.password !== form.password_confirmation) {
+      newErrors.password_confirmation = ['Passwords do not match.'];
+    }
+
+    return newErrors;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      toast.error('Please fix the errors below.');
+      return;
+    }
+
     const { department_id, ...payload } = form;
     const result = await register(payload);
     if (result.success) {
@@ -62,7 +108,7 @@ export default function Register() {
         <div className="card shadow-md">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="label">Full Name</label>
+              <label className="label">Full Name <span className="text-red-500">*</span></label>
               <input name="name" type="text" value={form.name} onChange={handleChange}
                 className={`input ${errors.name ? 'border-red-400' : ''}`} placeholder="John Doe" />
               {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name[0]}</p>}
@@ -70,7 +116,7 @@ export default function Register() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label">Department</label>
+                <label className="label">Department <span className="text-red-500">*</span></label>
                 <select name="department_id" value={form.department_id} onChange={handleDepartmentChange}
                   className={`input ${errors.department_id ? 'border-red-400' : ''}`}>
                   <option value="">Select department</option>
@@ -79,7 +125,7 @@ export default function Register() {
                 {errors.department_id && <p className="text-red-500 text-xs mt-1">{errors.department_id[0]}</p>}
               </div>
               <div>
-                <label className="label">Class</label>
+                <label className="label">Class <span className="text-red-500">*</span></label>
                 <select name="class_id" value={form.class_id} onChange={handleChange} disabled={!form.department_id}
                   className={`input ${errors.class_id ? 'border-red-400' : ''}`}>
                   <option value="">{form.department_id ? 'Select class' : 'Select department first'}</option>
@@ -90,23 +136,24 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="label">Email</label>
+              <label className="label">Email <span className="text-red-500">*</span></label>
               <input name="email" type="email" value={form.email} onChange={handleChange}
                 className={`input ${errors.email ? 'border-red-400' : ''}`} placeholder="john@example.com" />
               {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email[0]}</p>}
             </div>
 
             <div>
-              <label className="label">Password</label>
+              <label className="label">Password <span className="text-red-500">*</span></label>
               <input name="password" type="password" value={form.password} onChange={handleChange}
                 className={`input ${errors.password ? 'border-red-400' : ''}`} placeholder="Min. 8 characters" />
               {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password[0]}</p>}
             </div>
 
             <div>
-              <label className="label">Confirm Password</label>
+              <label className="label">Confirm Password <span className="text-red-500">*</span></label>
               <input name="password_confirmation" type="password" value={form.password_confirmation} onChange={handleChange}
-                className="input" placeholder="Repeat password" />
+                className={`input ${errors.password_confirmation ? 'border-red-400' : ''}`} placeholder="Repeat password" />
+              {errors.password_confirmation && <p className="text-red-500 text-xs mt-1">{errors.password_confirmation[0]}</p>}
             </div>
 
             <button type="submit" disabled={loading} className="btn-primary w-full py-2.5 mt-2">
