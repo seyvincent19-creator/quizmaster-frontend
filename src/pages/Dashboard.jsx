@@ -254,21 +254,11 @@ export default function Dashboard() {
         }
       >
         <div className="py-2">
-          <p className="text-sm text-gray-500 mb-4">Select the subject for your quiz, or pick "All Subjects" for 100 random questions.</p>
+          <p className="text-sm text-gray-500 mb-4">Select the subject for your quiz.</p>
           {subjectsLoading ? (
             <div className="flex justify-center py-8"><Spinner /></div>
           ) : (
             <div className="grid grid-cols-1 gap-2 max-h-72 overflow-y-auto pr-1">
-              {/* All Subjects card */}
-              <SubjectCard
-                selected={selectedSubjectId === null}
-                onClick={() => setSelectedSubjectId(null)}
-                icon="🌐"
-                name="All Subjects"
-                description="100 random questions from the full pool"
-                count={null}
-                countLabel="100 questions"
-              />
               {subjects.map(s => (
                 <SubjectCard
                   key={s.id}
